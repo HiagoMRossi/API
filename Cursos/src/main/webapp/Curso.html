@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulário de Cursos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        #form-container {
+            width: 80%;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #course-list {
+            margin-top: 20px;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        #course-list th, #course-list td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        #course-list th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+
+<div id="form-container">
+    <h2>Formulário de Curso</h2>
+    <form id="course-form" >
+		<div id="iddiv" hidden>
+		<label for="id">ID:</label>
+        <input type="text" id="id" name="id" value="0" readonly ><br>
+			
+		</div>
+        
+        <label for="nome">Nome:</label>
+        <input type="text" id="nome" name="nome" required><br>
+	
+        <label for="descricao">Descrição:</label>
+        <input type="text" id="descricao" name="descricao" required><br>
+
+        <label for="duracao">Duração (horas):</label>
+        <input type="number" id="duracao" name="duracao" required><br>
+
+        <label for="preco">Preço:</label>
+        <input type="number" id="preco" name="preco" required><br>
+
+        <label for="docente">Docente:</label>
+        <input type="text" id="docente" name="docente" required><br>
+
+        <button type="button" onclick="adicionarCurso()" id="botaAddCurso">Adicionar Curso</button>
+        <button type="button" id="botaCancelar" onclick="cancelar()" hidden>Resetar</button>
+    </form>
+
+    <h2>Lista de Cursos</h2>
+    <table >
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Descricao</th>
+                <th>Duração (horas)</th>
+                <th>Preço</th>
+                <th>Docente</th>
+                <th>BTNS</th>
+            </tr>
+        </thead>
+        <tbody id="course-list">
+            <!-- A lista de cursos será preenchida dinamicamente via API -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+	
+function cancelar(){
+	document.getElementById("iddiv").hidden = true
+	document.getElementById("botaCancelar").hidden = true
+	document.getElementById("botaAddCurso").innerText = "Adicionar Curso"
+	
+	document.getElementById("id").value = 0
+	document.getElementById("iddiv").hidden = true
+	document.getElementById("nome").value = null
+	document.getElementById("descricao").value = ""
+	document.getElementById("duracao").value = ""
+	document.getElementById("preco").value = ""
+	document.getElementById("docente").value = ""
+	
+	
+}
+
+function botaoAlterar(obj){
+	console.log(obj.id)
+	document.getElementById("iddiv").hidden = false
+	document.getElementById("botaCancelar").hidden = false
+	document.getElementById("botaAddCurso").innerText = "Alterar Curso"
+	
+	document.getElementById("id").value = obj.id
+	document.getElementById("nome").value = obj.nome
+	document.getElementById("descricao").value = obj.descricao
+	document.getElementById("duracao").value = obj.duracaoEmHoras
+	document.getElementById("preco").value = obj.preco
+	document.getElementById("docente").value = obj.docente
+	
+	
+	
+	
+//	console.log(obj.id)
+}
+function listar() {
+    fetch('http://localhost:8080/Cursos/Main')
+        .then(response => response.json())
+        .then(dados => mostrar(dados))     
+        
+        .catch(error => console.error('Erro ao carregar cotacoes:', error));
+}
+
+function mostrar(dados) {
+    var tabela = document.getElementById("course-list")
+    tabela.innerHTML = ""
+    
+    for (var i in dados) {
+        
+        tabela.innerHTML += "<tr>" +
+                    
+                    "<td>"+ dados[i].nome +"</td>" +
+                    "<td>"+ dados[i].descricao +"</td>" +
+                    "<td>"+ dados[i].duracaoEmHoras +"</td>" +
+                    "<td>"+ dados[i].preco +"</td>" +
+                    "<td>"+ dados[i].docente +"</td>" +
+                    "<td>"+ "<input type='button' value='A' onclick='botaoAlterar("+JSON.stringify(dados[i])+")'/><input type='button' value='X' onclick='excluirCurso("+dados[i].id+")'/>" +"</td>" + 
+                  "</tr>"
+                  
+    }
+}
+
+function excluirCurso(id) {
+	console.log("AQUI");
+	fetch('http://localhost:8080/Cursos/Main', {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id }),
+    })
+    
+    .then(data => {
+        
+        listar();
+    })
+    .catch(error => console.error('Erro ao excluir produto:', error));
+}
+
+function adicionarCurso() {
+	console.log(metodo)
+
+	var id = document.getElementById('id').value;
+    var nome = document.getElementById('nome').value;
+    var descricao = document.getElementById('descricao').value;
+    var duracaoEmHoras = document.getElementById('duracao').value;
+    var preco = document.getElementById('preco').value;
+    var docente = document.getElementById('docente').value;
+    var metodo
+    
+    if (id != 0) {
+		metodo = "PUT"
+	} else {
+		metodo = "POST"
+	}
+	
+	
+	
+    fetch('http://localhost:8080/Cursos/Main', {
+        method: metodo,
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({id, nome, descricao, duracaoEmHoras, preco, docente }),
+    })
+    .then(() => listar())
+
+}
+listar()
+</script>
+
+</body>
+</html>
